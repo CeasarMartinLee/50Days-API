@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 import { BaseEntity } from 'typeorm/repository/BaseEntity'
+import { Length } from 'class-validator';
 
 @Entity()
 export default class Game extends BaseEntity {
