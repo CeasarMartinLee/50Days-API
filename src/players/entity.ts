@@ -1,18 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { MinLength, IsString, IsEmail } from 'class-validator';
+import { MinLength, IsString } from 'class-validator';
 
 @Entity()
 export default class Player {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   id: string
 
   @IsString()
   @MinLength(3)
-  @Column()
+  @Column({nullable: false})
   username: string
-
-  @IsEmail()
-  @Column()
-  email:string
-
 }
+
