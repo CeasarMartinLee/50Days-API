@@ -8,7 +8,7 @@ import PlayerController from './players/controller'
 
 const app = createExpressServer({
     controllers: [
-        GameController
+        GameController,
         PlayerController
     ],
     authorizationChecker: async (action: Action) => {
