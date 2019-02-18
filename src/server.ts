@@ -1,14 +1,15 @@
 import "reflect-metadata"
 require('dotenv').config()
-// import { SampleController } from './controllers'
 import { createExpressServer, Action } from 'routing-controllers'
 import dbSetup from './db'
 import GameController from "./game/controller";
+import PlayerController from './players/controller'
 
 
 const app = createExpressServer({
     controllers: [
         GameController
+        PlayerController
     ],
     authorizationChecker: async (action: Action) => {
         return false
