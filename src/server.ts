@@ -3,11 +3,12 @@ require('dotenv').config()
 // import { SampleController } from './controllers'
 import { createExpressServer, Action } from 'routing-controllers'
 import dbSetup from './db'
+import GameController from "./game/controller";
 
 
 const app = createExpressServer({
     controllers: [
-  
+        GameController
     ],
     authorizationChecker: async (action: Action) => {
         return false
