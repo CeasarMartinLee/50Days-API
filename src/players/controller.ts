@@ -1,4 +1,4 @@
-import { JsonController, Post, Body, Get, BadRequestError } from 'routing-controllers'
+import { JsonController, Post, Body, Get, BadRequestError, NotFoundError } from 'routing-controllers'
 import {IsString, IsNotEmpty, MinLength, Max, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments} from "class-validator";
 import Player from './entity'
 import Game from '../game/entity'
@@ -27,25 +27,55 @@ export class PlayerJoin {
   gameCode: number
 }
 
+export class AuthPlayerInput {
+  @IsNotEmpty()
+  playerId: string
+
+  @IsNotEmpty()
+  gameId: string
+}
+
 
 
 @JsonController()
 export default class PlayerController{
   @Post('/game/join')
   async joinGame(@Body() player:PlayerJoin ) {
-    // Check if the game is available
+
     const game = await Game.findOne({code: player.gameCode})
 
-    if(!game && game.status !== 'Pending') {
+    if(game && game.status === 'Pending') {
+      const score = new Score()
+      score.game = game
+      score.username = player.username
+      await score.save()
+
+      return { player: score, game: game }
+
+    } else {
       throw new BadRequestError()
     }
     
-    const score = new Score()
-    score.game = game
-    score.username = player.username
-    await score.save()
+  }
 
-    return { user: score.id }
+  @Post('/player/authenticate')
+  async authPlayer(@Body() auth:AuthPlayerInput) {
+    const score = await Score.findOne({ id: auth.playerId, game: auth.gameId }, { relations: ["game"]})
+
+    console.log(score, '<== SCORE')
+
+    if(!score) {
+      console.log('BAD REQUEST')
+      throw new BadRequestError()
+    }
+
+    const game = await Game.findOne(score.game)
+
+    // if(sco === 'Finished') {
+    //   throw new NotFoundError()
+    // }
+
+    return {score, game}
   }
 
   @Get('/')

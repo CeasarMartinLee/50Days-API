@@ -1,5 +1,5 @@
 import { BaseEntity } from 'typeorm/repository/BaseEntity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinTable } from 'typeorm'
 import { MinLength } from 'class-validator';
 import Game from '../game/entity';
 
@@ -21,7 +21,8 @@ export default class Score extends BaseEntity {
   @Column({ nullable: false, default: 0})
   totalTimeStamp: number
 
-  @ManyToOne(type => Game, game => game.id)
+  @ManyToOne(type => Game)
   game: Game
+
 
 }
