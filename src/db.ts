@@ -29,7 +29,7 @@ export default () =>
     type: "postgres",
     url: process.env.DATABASE_URL || 'postgres://postgres:secret@localhost:5432/postgres',
     entities: [
-     Game
+     Game,
      Player
     ],
     ssl: true,
