@@ -1,8 +1,8 @@
 import { JsonController, Post, Body, Get, BadRequestError, NotFoundError } from 'routing-controllers'
 import {IsString, IsNotEmpty, MinLength, Max, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments} from "class-validator";
-import Player from './entity'
 import Game from '../game/entity'
 import Score from '../score/entity'
+import { io } from '../server'
 
 @ValidatorConstraint({ name: "game code", async: false })
 export class GameIdLength implements ValidatorConstraintInterface {
@@ -50,6 +50,8 @@ export default class PlayerController{
       score.username = player.username
       await score.save()
 
+      io.emit(`PLAYER_JOINED_${game.id}`, {player: score})
+
       return { player: score, game: game }
 
     } else {
@@ -60,9 +62,7 @@ export default class PlayerController{
 
   @Post('/player/authenticate')
   async authPlayer(@Body() auth:AuthPlayerInput) {
-    const score = await Score.findOne({ id: auth.playerId, game: auth.gameId }, { relations: ["game"]})
-
-    console.log(score, '<== SCORE')
+    const score = await Score.findOne({ id: auth.playerId, game: auth.gameId} , { relations: ["game"]})
 
     if(!score) {
       console.log('BAD REQUEST')
@@ -70,10 +70,6 @@ export default class PlayerController{
     }
 
     const game = await Game.findOne(score.game)
-
-    // if(sco === 'Finished') {
-    //   throw new NotFoundError()
-    // }
 
     return {score, game}
   }
