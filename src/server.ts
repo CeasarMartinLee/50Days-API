@@ -6,6 +6,7 @@ import dbSetup from './db'
 import GameController from "./game/controller";
 import PlayerController from './players/controller'
 import QuestionController from './question/controller'
+import Game from './game/entity'
 
 
 const app = createExpressServer({
@@ -47,6 +48,14 @@ dbSetup().then(() => {
         socket.on('CHANGE_QUESTION', function(data:any){
             console.log('IM HERE', data)
             io.emit('QUESTION_CHANGED', data);
+        })
+
+        socket.on('CHANGE_GAME_STATUS', async function(data:any){
+            const game = await Game.findOne(data.gameId)
+            game.status = data.status
+            await game.save
+            io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status});
+
         })
     });
 
