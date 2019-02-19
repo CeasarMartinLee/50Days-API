@@ -4,12 +4,14 @@ import { createExpressServer, Action } from 'routing-controllers'
 import dbSetup from './db'
 import GameController from "./game/controller";
 import PlayerController from './players/controller'
+import QuestionController from './question/controller'
 
 
 const app = createExpressServer({
     controllers: [
         GameController,
-        PlayerController
+        PlayerController,
+        QuestionController
     ],
     authorizationChecker: async (action: Action) => {
         return false
