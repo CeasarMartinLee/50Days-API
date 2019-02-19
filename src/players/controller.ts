@@ -62,14 +62,14 @@ export default class PlayerController{
 
   @Post('/player/authenticate')
   async authPlayer(@Body() auth:AuthPlayerInput) {
-    const score = await Score.findOne({ id: auth.playerId, game: auth.gameId} , { relations: ["game"]})
+    const score = await Score.find({ where: {id: auth.playerId, game: auth.gameId}})
 
     if(!score) {
       console.log('BAD REQUEST')
       throw new BadRequestError()
     }
 
-    const game = await Game.findOne(score.game)
+    const game = await Game.findOne(score[0].game)
 
     return {score, game}
   }
