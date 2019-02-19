@@ -18,9 +18,7 @@ export default class GameController {
 
     @Get('/game/:id/players')
     async getPlayers(@Param('id') id: number) {
-
-        
-        const players = await Score.find({ where: { gameId: id }})
+        const players = await Score.find({ where: {game: id}})
         return players
     }
 
