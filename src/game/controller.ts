@@ -6,12 +6,13 @@ import Game from './entity'
 export default class GameController {
 
     @Post("/game")
-    createGame(@Body() game: Game) {
+    async createGame() {
+        const game = new Game()
         game.status = "Pending"
         game.level = 1
         game.code = Math.floor(1000 + Math.random() * 9000)
         console.log(game)
-        return game.save()
+        return await game.save()
     }
 
     @Get("/game/:id")
