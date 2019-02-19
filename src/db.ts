@@ -35,7 +35,7 @@ export default () =>
      Game,
      Player,
      Question,
-     Answer
+     Answer,
      Score
     ],
     ssl: true,

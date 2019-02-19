@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column,  OneToMany} from 'typeorm'
 import { BaseEntity } from 'typeorm/repository/BaseEntity'
+import { Length } from 'class-validator';
 import Score from '../score/entity'
 import { IsNumber } from 'class-validator';
 
