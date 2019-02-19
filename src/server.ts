@@ -22,21 +22,29 @@ const app = createExpressServer({
 })
 app.set("port", process.env.PORT || 3000)
 
-let http = require('http').Server(app)
-let io = require('socket.io')(http)
-
-
-io.on('connection', function(socket: any){
-    console.log('a user connected');
-});
 
 
 dbSetup().then(() => {
-    app.listen(app.get("port"), () => {
+    const server = app.listen(app.get("port"), () => {
         console.log(
             "App is running on http://localhost:%d in %s mode",
             app.get("port"),
             app.get("env")
         )
+    })
+
+    let socket = require('socket.io');
+    let io = socket(server);
+
+    io.on('connection', (socket:any) => {
+        console.log(socket.id);
+
+        socket.on('SEND_MESSAGE', function(data:any){
+            console.log('IM HERE')
+            io.emit('RECEIVE_MESSAGE', data);
+        })
     });
+
+    
+
 }).catch((err) => console.error(err))
