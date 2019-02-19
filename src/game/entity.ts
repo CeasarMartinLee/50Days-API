@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column,  OneToMany} from 'typeorm'
 import { BaseEntity } from 'typeorm/repository/BaseEntity'
-import { Length, IsNumber } from 'class-validator';
+import Score from '../score/entity'
+import { IsNumber } from 'class-validator';
 
 @Entity()
 export default class Game extends BaseEntity {
@@ -19,5 +20,8 @@ export default class Game extends BaseEntity {
 
     @Column('text', { nullable: false })
     status: string
+
+    @OneToMany(type => Score, score => score.id)
+    scores: Score[]
 
 }

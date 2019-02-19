@@ -6,6 +6,7 @@ import Game from './game/entity'
 import Player from './players/entity'
 import Question from './question/entity'
 import Answer from './answer/entity'
+import Score from './score/entity'
 
 class CustomNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
 
@@ -35,6 +36,7 @@ export default () =>
      Player,
      Question,
      Answer
+     Score
     ],
     ssl: true,
     synchronize: true, // careful with this in production!
