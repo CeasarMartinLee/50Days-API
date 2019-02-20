@@ -1,6 +1,7 @@
 import { JsonController, Body, Post, Get, Param } from 'routing-controllers'
 import Game from './entity'
 import Score from '../score/entity';
+import ActiveQuestion from '../activequestions/entity'
 
 
 @JsonController()
@@ -12,8 +13,19 @@ export default class GameController {
         game.status = "Pending"
         game.level = 1
         game.code = Math.floor(1000 + Math.random() * 9000)
-        console.log(game)
-        return await game.save()
+        await game.save()
+
+        console.log(game, ' POST CREATEGAME')
+
+        let activeQuestions = new ActiveQuestion()
+        for (let i=0; i <= 30; i++) {
+            activeQuestions.game = game
+            activeQuestions.questionId = await Math.floor(1 + Math.random() * 100)
+            activeQuestions.save()
+        }
+
+
+        return game 
     }
 
     @Get('/game/:id/players')

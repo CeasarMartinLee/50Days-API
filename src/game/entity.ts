@@ -8,7 +8,7 @@ import { IsNumber } from 'class-validator';
 export default class Game extends BaseEntity {
 
     @PrimaryGeneratedColumn()
-    id?: number
+    id: number
 
     @IsNumber()
     @Column('integer', { nullable: false })
