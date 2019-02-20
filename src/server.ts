@@ -35,8 +35,6 @@ export let io = socket(server);
 
 const getCurrentQuestion = async (gameId:number) => {
     const activeQuestions = await ActiveQuestion.find({where: { game: gameId, isDisplayed: false }})
-
-    console.log(activeQuestions[0], '****************** ACTIVE QUESTION LENGTH **************')
     const currentQuestion = await Question.findOne({where: {id: activeQuestions[0].questionId}, relations: ["answer"]})
     currentQuestion.answer = currentQuestion.answer
         .map((a) => ({ sort: Math.random(), value: a }))
@@ -54,12 +52,8 @@ dbSetup().then(() => {
     })
 
     
-    // export const io = IO(server)
     io.on('connection', (socket:any) => {
-        console.log(socket.id);
-
         socket.on('CHANGE_QUESTION', function(data:any){
-            console.log('IM HERE', data)
             io.emit('QUESTION_CHANGED', data);
         })
 
@@ -67,8 +61,7 @@ dbSetup().then(() => {
             const game = await Game.findOne(data.gameId)
             game.status = data.status
             await game.save()
-            io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status});
-
+            io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status})
         })
 
         socket.on('GET_CURRENT_QUESTION', async function(data:any){
@@ -78,13 +71,9 @@ dbSetup().then(() => {
 
         socket.on('NEXT_QUESTION', async (data:any) => {
             const { activeQuestionId, gameId } = data
-            console.log(activeQuestionId, '*********************** ACTIVE ID')
-
             const activeQuestion = await ActiveQuestion.findOneOrFail(activeQuestionId)
-            console.log(activeQuestion, '###################################### ACTIVE QUESTION')
             activeQuestion.isDisplayed = true
             await activeQuestion.save()
-
 
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
             io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
