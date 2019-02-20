@@ -7,6 +7,8 @@ import GameController from "./game/controller";
 import PlayerController from './players/controller'
 import QuestionController from './question/controller'
 import Game from './game/entity'
+import ActiveQuestion from "./activequestions/entity";
+import Question from "./question/entity";
 
 
 const app = createExpressServer({
@@ -55,6 +57,21 @@ dbSetup().then(() => {
             game.status = data.status
             await game.save
             io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status});
+
+        })
+
+        socket.on('GET_CURRENT_QUESTION', async function(data:any){
+            console.log(data, '<=================DATA')
+            const currentQuestionId = await ActiveQuestion.findOne({where: { gameId: data.gameId}})
+            const currentQuestion = await Question.findOne({where: {id: currentQuestionId.questionId}, relations: ["answer"]})
+            console.log(currentQuestion, '<=================CR')
+            currentQuestion.answer = currentQuestion.answer
+            .map((a) => ({ sort: Math.random(), value: a }))
+            .sort((a, b) => a.sort - b.sort)
+            .map((a) => a.value)
+            console.log(currentQuestion, '<=================CR')
+
+            io.emit(`CURRENT_QUESTION_${data.gameId}`, {currentQuestion});
 
         })
     });
