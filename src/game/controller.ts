@@ -41,4 +41,10 @@ export default class GameController {
         return Game.findOne(id)
     }
 
+    @Get('/games/:id/stats')
+    async getGameStats(@Param('id') id: number ) {
+        const gameScores = await Score.find({ where: {game: id }})
+        return gameScores
+    }
+
 }

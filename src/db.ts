@@ -8,6 +8,7 @@ import Question from './question/entity'
 import Answer from './answer/entity'
 import Score from './score/entity'
 import ActiveQuestion from './activequestions/entity';
+import Guesses from './guesses/entity';
 
 class CustomNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
 
@@ -38,7 +39,8 @@ export default () =>
      Question,
      Answer,
      Score,
-     ActiveQuestion
+     ActiveQuestion,
+     Guesses
     ],
     ssl: true,
     synchronize: true, // careful with this in production!

@@ -9,6 +9,8 @@ import QuestionController from './question/controller'
 import Game from './game/entity'
 import ActiveQuestion from "./activequestions/entity";
 import Question from "./question/entity";
+import Guesses from "./guesses/entity"
+import Score from './score/entity'
 
 
 const app = createExpressServer({
@@ -77,6 +79,51 @@ dbSetup().then(() => {
 
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
             io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
+        })
+
+        socket.on('SUBMIT_PLAYER_ANSWER', async (data:any) => {
+            const { 
+                activeQuestionId, 
+                playerId, 
+                isCorrect, 
+                timestamp, 
+                gameId 
+            } = data
+
+            const totalPlayer = await Score.findAndCount({where: {game: data.gameId}})
+
+            const correctGuesses = await Guesses.findAndCount({where: { activeQuestionId, isCorrect: true }})
+
+            const newGuess = new Guesses()
+            newGuess.gameId = gameId
+            newGuess.playerId = playerId
+            newGuess.isCorrect = isCorrect
+            newGuess.timestamp = parseInt(timestamp)
+            newGuess.activeQuestionId = activeQuestionId
+            await newGuess.save()
+        
+            // Update the score
+            const score = await Score.findOne(playerId)
+
+            // player 1 - 3 => 300point
+            // player 4 - 10 => 200point
+            // rest => 100 points
+            if(isCorrect) {
+                if(correctGuesses.length < 3) {
+                    score.currentScore = score.currentScore + 300
+                } else if(correctGuesses.length < 10) {
+                    score.currentScore = score.currentScore + 200
+                } else {
+                    score.currentScore = score.currentScore + 100
+                }
+            }
+
+            score.totalTimeStamp = Number(score.totalTimeStamp) + timestamp
+            await score.save() 
+            
+            if(isCorrect) {
+                io.emit(`PLAYER_STAT_UPDATE_${gameId}`, { playerId, score: score.currentScore })
+            }
         })
     });
 
