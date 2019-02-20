@@ -108,7 +108,7 @@ dbSetup().then(() => {
             // player 1 - 3 => 300point
             // player 4 - 10 => 200point
             // rest => 100 points
-            if(data.isCorrect) {
+            if(isCorrect) {
                 if(correctGuesses.length < 3) {
                     score.currentScore = score.currentScore + 300
                 } else if(correctGuesses.length < 10) {
@@ -119,7 +119,11 @@ dbSetup().then(() => {
             }
 
             score.totalTimeStamp = Number(score.totalTimeStamp) + timestamp
-            await score.save()          
+            await score.save() 
+            
+            if(isCorrect) {
+                io.emit(`PLAYER_STAT_UPDATE_${gameId}`, { playerId, score: score.currentScore })
+            }
         })
     });
 
