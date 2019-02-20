@@ -121,9 +121,9 @@ dbSetup().then(() => {
             score.totalTimeStamp = Number(score.totalTimeStamp) + timestamp
             await score.save() 
             
-            if(isCorrect) {
+            // if(isCorrect) {              
                 io.emit(`PLAYER_STAT_UPDATE_${gameId}`, { playerId, score: score.currentScore })
-            }
+            // }
         })
     });
 
