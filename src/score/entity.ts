@@ -18,7 +18,7 @@ export default class Score extends BaseEntity {
   @Column({ default: false , nullable: false})
   isEliminated: boolean
 
-  @Column({ nullable: false, default: 0})
+  @Column('decimal', {nullable: false, default: 0})
   totalTimeStamp: number
 
   @ManyToOne(type => Game)
