@@ -4,7 +4,7 @@ import Question from '../question/entity'
 import { IsString, IsBoolean } from 'class-validator';
 
 @Entity()
-export default class Answer extends BaseEntity {
+export default class Answer extends BaseEntity { 
 
   @PrimaryGeneratedColumn()
   id?: number
