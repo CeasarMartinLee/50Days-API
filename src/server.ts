@@ -55,13 +55,26 @@ dbSetup().then(() => {
 
     
     io.on('connection', (socket:any) => {
-        socket.on('CHANGE_QUESTION', function(data:any){
-            io.emit('QUESTION_CHANGED', data);
-        })
+        // socket.on('CHANGE_QUESTION', function(data:any){
+        //     io.emit('QUESTION_CHANGED', data);
+        // })
 
         socket.on('CHANGE_GAME_STATUS', async function(data:any){
             const game = await Game.findOne(data.gameId)
             game.status = data.status
+
+            if(data.status === 'Started') {
+                const gamePlayers = await Score.find({where: {game: game}})
+                
+                if(gamePlayers.length <= 2) {
+                    game.maxRounds = 1
+                } else if(gamePlayers.length <= 6) {
+                    game.maxRounds = 2
+                } else {
+                    game.maxRounds = 3
+                }
+            }
+
             await game.save()
             io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status})
         })
@@ -103,8 +116,6 @@ dbSetup().then(() => {
                 gameId 
             } = data
 
-            const totalPlayer = await Score.findAndCount({where: {game: data.gameId}})
-
             const correctGuesses = await Guesses.find({where: { activeQuestionId, isCorrect: true }})
             console.log(correctGuesses.length, '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
             const newGuess = new Guesses()
@@ -115,12 +126,8 @@ dbSetup().then(() => {
             newGuess.activeQuestionId = activeQuestionId
             await newGuess.save()
         
-            // Update the score
             const score = await Score.findOne(playerId)
 
-            // player 1 - 3 => 300point
-            // player 4 - 10 => 200point
-            // rest => 100 points
             if(isCorrect) {
                 if(correctGuesses.length < 1) {
                     score.currentScore = score.currentScore + 300
