@@ -55,9 +55,6 @@ dbSetup().then(() => {
 
     
     io.on('connection', (socket:any) => {
-        // socket.on('CHANGE_QUESTION', function(data:any){
-        //     io.emit('QUESTION_CHANGED', data);
-        // })
 
         socket.on('CHANGE_GAME_STATUS', async function(data:any){
             const game = await Game.findOne(data.gameId)
@@ -98,9 +95,38 @@ dbSetup().then(() => {
                 game.level = Number(game.level + 1)
                 await game.save()
 
-                io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
-
+                
                 // Next step: Eliminate player
+                switch(game.maxRounds) {
+                    case 1: 
+                        game.status = 'Finished'
+                        const winner = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
+                        io.emit(`WINNER_${game.id}`, { winner: winner[0] })
+                    default:
+                        switch(game.level) {
+                            case 1:
+                                game.level = Number(game.level + 1)
+                                const playerList = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
+                                
+                                playerList.forEach(async player => {
+                                    player.isEliminated = true
+                                    await player.save()
+                                })
+
+                                game.level = Number(game.level + 1)
+                                await game.save()
+
+                                io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
+                                io.emit(`DISCONNECT_PLAYER_${game.id}`, { players: playerList })
+                            case 2:
+                                const winner = await Score.find({where: {game, isEliminated: false}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
+                                io.emit(`WINNER_${game.id}`, { winner: winner[0] })
+                        }
+
+                        // const playerList = Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
+                }
+
+                // const playerList = Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
             }
 
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
