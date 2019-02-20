@@ -92,8 +92,8 @@ dbSetup().then(() => {
 
             const totalPlayer = await Score.findAndCount({where: {game: data.gameId}})
 
-            const correctGuesses = await Guesses.findAndCount({where: { activeQuestionId, isCorrect: true }})
-
+            const correctGuesses = await Guesses.find({where: { activeQuestionId, isCorrect: true }})
+            console.log(correctGuesses.length, '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
             const newGuess = new Guesses()
             newGuess.gameId = gameId
             newGuess.playerId = playerId
@@ -109,8 +109,9 @@ dbSetup().then(() => {
             // player 4 - 10 => 200point
             // rest => 100 points
             if(isCorrect) {
-                if(correctGuesses.length < 3) {
+                if(correctGuesses.length < 1) {
                     score.currentScore = score.currentScore + 300
+                    console.log('NOT')
                 } else if(correctGuesses.length < 10) {
                     score.currentScore = score.currentScore + 200
                 } else {
@@ -121,7 +122,7 @@ dbSetup().then(() => {
             score.totalTimeStamp = Number(score.totalTimeStamp) + timestamp
             await score.save() 
             
-            if(isCorrect) {
+            if(isCorrect) {              
                 io.emit(`PLAYER_STAT_UPDATE_${gameId}`, { playerId, score: score.currentScore })
             }
         })
