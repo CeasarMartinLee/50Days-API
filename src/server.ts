@@ -33,6 +33,17 @@ let socket = require('socket.io');
 export let io = socket(server);
 
 
+const getCurrentQuestion = async (gameId:number) => {
+    const activeQuestions = await ActiveQuestion.find({where: { game: gameId, isDisplayed: false }})
+
+    console.log(activeQuestions[0], '****************** ACTIVE QUESTION LENGTH **************')
+    const currentQuestion = await Question.findOne({where: {id: activeQuestions[0].questionId}, relations: ["answer"]})
+    currentQuestion.answer = currentQuestion.answer
+        .map((a) => ({ sort: Math.random(), value: a }))
+        .sort((a, b) => a.sort - b.sort)
+        .map((a) => a.value)
+    return {currentQuestion, activeId: activeQuestions[0].id}
+}
 dbSetup().then(() => {
     server.listen(app.get("port"), () => {
         console.log(
@@ -55,24 +66,28 @@ dbSetup().then(() => {
         socket.on('CHANGE_GAME_STATUS', async function(data:any){
             const game = await Game.findOne(data.gameId)
             game.status = data.status
-            await game.save
+            await game.save()
             io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status});
 
         })
 
         socket.on('GET_CURRENT_QUESTION', async function(data:any){
-            console.log(data, '<=================DATA')
-            const currentQuestionId = await ActiveQuestion.findOne({where: { gameId: data.gameId}})
-            const currentQuestion = await Question.findOne({where: {id: currentQuestionId.questionId}, relations: ["answer"]})
-            console.log(currentQuestion, '<=================CR')
-            currentQuestion.answer = currentQuestion.answer
-            .map((a) => ({ sort: Math.random(), value: a }))
-            .sort((a, b) => a.sort - b.sort)
-            .map((a) => a.value)
-            console.log(currentQuestion, '<=================CR')
+            const {currentQuestion, activeId } = await getCurrentQuestion(data.gameId)
+            io.emit(`CURRENT_QUESTION_${data.gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
+        })
 
-            io.emit(`CURRENT_QUESTION_${data.gameId}`, {currentQuestion});
+        socket.on('NEXT_QUESTION', async (data:any) => {
+            const { activeQuestionId, gameId } = data
+            console.log(activeQuestionId, '*********************** ACTIVE ID')
 
+            const activeQuestion = await ActiveQuestion.findOneOrFail(activeQuestionId)
+            console.log(activeQuestion, '###################################### ACTIVE QUESTION')
+            activeQuestion.isDisplayed = true
+            await activeQuestion.save()
+
+
+            const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
+            io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
         })
     });
 
