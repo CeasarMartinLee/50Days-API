@@ -77,6 +77,19 @@ dbSetup().then(() => {
             activeQuestion.isDisplayed = true
             await activeQuestion.save()
 
+            const DisplayedQuestion = await ActiveQuestion.find({where: {game: gameId, isDisplayed: true }})
+            
+            if(DisplayedQuestion.length % 5 === 0) {
+                // Level Up
+                const game = await Game.findOne(gameId)
+                game.level = Number(game.level + 1)
+                await game.save()
+
+                io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
+
+                // Next step: Eliminate player
+            }
+
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
             io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
         })
@@ -111,7 +124,6 @@ dbSetup().then(() => {
             if(isCorrect) {
                 if(correctGuesses.length < 1) {
                     score.currentScore = score.currentScore + 300
-                    console.log('NOT')
                 } else if(correctGuesses.length < 10) {
                     score.currentScore = score.currentScore + 200
                 } else {
