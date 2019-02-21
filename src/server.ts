@@ -89,7 +89,7 @@ dbSetup().then(() => {
 
             const DisplayedQuestion = await ActiveQuestion.find({where: {game: gameId, isDisplayed: true }})
             
-            if(DisplayedQuestion.length % 4 === 0) {
+            if(DisplayedQuestion.length % 5 === 0) {
                 // Level Up
                 console.log('******************************* TIME TO LEVEL UP **********************')
                 const game = await Game.findOne(gameId)
