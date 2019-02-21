@@ -89,10 +89,10 @@ dbSetup().then(() => {
 
             const DisplayedQuestion = await ActiveQuestion.find({where: {game: gameId, isDisplayed: true }})
             
-            if(DisplayedQuestion.length % 5 === 0) {
+            if(DisplayedQuestion.length % 3 === 0) {
                 // Level Up
-                console.log('******************************* TIME TO LEVEL UP **********************')
                 const game = await Game.findOne(gameId)
+                console.log('******************************* TIME TO LEVEL UP **********************', game.level)
                 
                 
                 // Next step: Eliminate player
@@ -116,7 +116,9 @@ dbSetup().then(() => {
 
                                 io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
                                 io.emit(`DISCONNECT_PLAYER_${game.id}`, { players: playerList })
+                                break;
                             case 2:
+
                                 const winner = await Score.find({where: {game, isEliminated: false}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
                                 io.emit(`WINNER_${game.id}`, { winner: winner[0] })
                         }
