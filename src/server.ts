@@ -89,12 +89,11 @@ dbSetup().then(() => {
 
             const DisplayedQuestion = await ActiveQuestion.find({where: {game: gameId, isDisplayed: true }})
             
-            if(DisplayedQuestion.length % 5 === 0) {
+            if(DisplayedQuestion.length % 4 === 0) {
                 // Level Up
+                console.log('******************************* TIME TO LEVEL UP **********************')
                 const game = await Game.findOne(gameId)
-                game.level = Number(game.level + 1)
-                await game.save()
-
+                
                 
                 // Next step: Eliminate player
                 switch(game.maxRounds) {
@@ -106,6 +105,8 @@ dbSetup().then(() => {
                         switch(game.level) {
                             case 1:
                                 game.level = Number(game.level + 1)
+                                await game.save()
+                                
                                 const playerList = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
                                 
                                 playerList.forEach(async player => {
@@ -113,8 +114,7 @@ dbSetup().then(() => {
                                     await player.save()
                                 })
 
-                                game.level = Number(game.level + 1)
-                                await game.save()
+                                
 
                                 io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
                                 io.emit(`DISCONNECT_PLAYER_${game.id}`, { players: playerList })
@@ -122,12 +122,11 @@ dbSetup().then(() => {
                                 const winner = await Score.find({where: {game, isEliminated: false}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
                                 io.emit(`WINNER_${game.id}`, { winner: winner[0] })
                         }
-
-                        // const playerList = Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
                 }
-
-                // const playerList = Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
+               
             }
+
+            
 
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
             io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
