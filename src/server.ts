@@ -106,15 +106,13 @@ dbSetup().then(() => {
                             case 1:
                                 game.level = Number(game.level + 1)
                                 await game.save()
-                                
+
                                 const playerList = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
                                 
                                 playerList.forEach(async player => {
                                     player.isEliminated = true
                                     await player.save()
-                                })
-
-                                
+                                }) 
 
                                 io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
                                 io.emit(`DISCONNECT_PLAYER_${game.id}`, { players: playerList })
