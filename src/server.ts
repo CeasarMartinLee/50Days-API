@@ -55,13 +55,23 @@ dbSetup().then(() => {
 
     
     io.on('connection', (socket:any) => {
-        socket.on('CHANGE_QUESTION', function(data:any){
-            io.emit('QUESTION_CHANGED', data);
-        })
 
         socket.on('CHANGE_GAME_STATUS', async function(data:any){
             const game = await Game.findOne(data.gameId)
             game.status = data.status
+
+            if(data.status === 'Started') {
+                const gamePlayers = await Score.find({where: {game: game}})
+                
+                if(gamePlayers.length <= 2) {
+                    game.maxRounds = 1
+                } else if(gamePlayers.length <= 6) {
+                    game.maxRounds = 2
+                } else {
+                    game.maxRounds = 3
+                }
+            }
+
             await game.save()
             io.emit(`GAME_STATUS_CHANGED_${game.id}`, {status: game.status})
         })
@@ -77,6 +87,47 @@ dbSetup().then(() => {
             activeQuestion.isDisplayed = true
             await activeQuestion.save()
 
+            const DisplayedQuestion = await ActiveQuestion.find({where: {game: gameId, isDisplayed: true }})
+            
+            if(DisplayedQuestion.length % 6 === 0) {
+                // Level Up
+                const game = await Game.findOne(gameId)
+                console.log('******************************* TIME TO LEVEL UP **********************', game.level)
+                
+                
+                // Next step: Eliminate player
+                switch(game.maxRounds) {
+                    case 1: 
+                        game.status = 'Finished'
+                        const winner = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
+                        io.emit(`WINNER_${game.id}`, { winner: winner[0] })
+                    default:
+                        switch(game.level) {
+                            case 1:
+                                game.level = Number(game.level + 1)
+                                await game.save()
+
+                                const playerList = await Score.find({where: {game}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, skip: 2})
+                                
+                                playerList.forEach(async player => {
+                                    player.isEliminated = true
+                                    await player.save()
+                                }) 
+
+                                io.emit(`GAME_LEVEL_UP_${gameId}`, game.level)
+                                io.emit(`DISCONNECT_PLAYER_${game.id}`, { players: playerList })
+                                break;
+                            case 2:
+
+                                const winner = await Score.find({where: {game, isEliminated: false}, order: {currentScore: 'DESC', totalTimeStamp: 'ASC'}, take: 1})
+                                io.emit(`WINNER_${game.id}`, { winner: winner[0] })
+                        }
+                }
+               
+            }
+
+            
+
             const {currentQuestion, activeId } = await getCurrentQuestion(gameId)
             io.emit(`CURRENT_QUESTION_${gameId}`, {id: currentQuestion.id, question: currentQuestion.question, answer: currentQuestion.answer, activeId});
         })
@@ -90,10 +141,8 @@ dbSetup().then(() => {
                 gameId 
             } = data
 
-            const totalPlayer = await Score.findAndCount({where: {game: data.gameId}})
-
-            const correctGuesses = await Guesses.findAndCount({where: { activeQuestionId, isCorrect: true }})
-
+            const correctGuesses = await Guesses.find({where: { activeQuestionId, isCorrect: true }})
+            console.log(correctGuesses.length, '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
             const newGuess = new Guesses()
             newGuess.gameId = gameId
             newGuess.playerId = playerId
@@ -102,14 +151,10 @@ dbSetup().then(() => {
             newGuess.activeQuestionId = activeQuestionId
             await newGuess.save()
         
-            // Update the score
             const score = await Score.findOne(playerId)
 
-            // player 1 - 3 => 300point
-            // player 4 - 10 => 200point
-            // rest => 100 points
             if(isCorrect) {
-                if(correctGuesses.length < 3) {
+                if(correctGuesses.length < 1) {
                     score.currentScore = score.currentScore + 300
                 } else if(correctGuesses.length < 10) {
                     score.currentScore = score.currentScore + 200
@@ -121,9 +166,9 @@ dbSetup().then(() => {
             score.totalTimeStamp = Number(score.totalTimeStamp) + timestamp
             await score.save() 
             
-            // if(isCorrect) {              
+            if(isCorrect) {              
                 io.emit(`PLAYER_STAT_UPDATE_${gameId}`, { playerId, score: score.currentScore })
-            // }
+            }
         })
     });
 

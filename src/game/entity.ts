@@ -22,7 +22,13 @@ export default class Game extends BaseEntity {
     @Column('text', { nullable: false })
     status: string
 
+    @Column('int', {nullable: true })
+    maxRounds: number
+
+
     @OneToMany(type => Score, score => score.id)
     scores: Score[]
+
+
 
 }
